@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: minwon
+      POSTGRES_PASSWORD: minwon
+      POSTGRES_DB: minwon_shield
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    environment:
+      APP_MODE: ${APP_MODE:-demo}
+      DATABASE_URL: postgresql+psycopg://minwon:minwon@db:5432/minwon_shield
+      AI_PROVIDER: local
+      FRONTEND_ORIGIN: http://localhost:3000
+      STORAGE_DIR: storage
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/storage:/app/storage
+
+  frontend:
+    build: ./frontend
+    environment:
+      APP_MODE: ${APP_MODE:-demo}
+      NEXT_PUBLIC_APP_MODE: ${APP_MODE:-demo}
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000/api
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
