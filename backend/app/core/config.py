@@ -25,13 +25,17 @@ class Settings(BaseSettings):
 
     @property
     def resolved_database_url(self) -> str:
-        prefix = "sqlite:///"
-        if not self.database_url.startswith(prefix):
-            return self.database_url
+        url = self.database_url
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
 
-        database_path = self.database_url[len(prefix) :]
+        prefix = "sqlite:///"
+        if not url.startswith(prefix):
+            return url
+
+        database_path = url[len(prefix) :]
         if database_path == ":memory:" or Path(database_path).is_absolute():
-            return self.database_url
+            return url
 
         absolute_path = (BACKEND_DIR / database_path).resolve()
         return f"{prefix}{absolute_path.as_posix()}"
