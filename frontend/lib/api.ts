@@ -10,21 +10,63 @@ import type {
   RuntimeConfig
 } from "@/lib/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api";
+function normalizeApiBase(value: string) {
+  let normalized = value.trim().replace(/\/+$/, "");
+  normalized = normalized.replace(/(?:\/api)+$/i, "/api");
+  return /\/api$/i.test(normalized) ? normalized : `${normalized}/api`;
+}
+
+const API_BASE = normalizeApiBase(
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api"
+);
+
+function apiUrl(path: string) {
+  const normalizedPath = path.replace(/^\/+/, "").replace(/^api\/+/i, "");
+  return `${API_BASE}/${normalizedPath}`;
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {})
-    },
-    cache: "no-store"
-  });
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`);
+  const url = apiUrl(path);
+  const method = init?.method ?? "GET";
+  const isBrowser = typeof window !== "undefined";
+  if (isBrowser) {
+    console.info(`[민원방패 API 요청] ${method} ${url}`);
   }
-  return response.json() as Promise<T>;
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...(init?.headers ?? {})
+      },
+      cache: "no-store"
+    });
+  } catch (error) {
+    if (!isBrowser) throw error;
+    console.error(`[민원방패 API 네트워크 오류] ${method} ${url}`, error);
+    throw new Error(`네트워크 연결 실패 (${url})`);
+  }
+
+  const responseBody = await response.text();
+  if (isBrowser) {
+    console.info(`[민원방패 API 응답] ${method} ${url} -> ${response.status}`);
+  }
+
+  if (!response.ok) {
+    if (isBrowser) {
+      console.error(
+        `[민원방패 API 오류 응답] ${method} ${url} -> ${response.status}`,
+        responseBody
+      );
+    }
+    throw new Error(
+      `HTTP ${response.status}: ${responseBody || response.statusText || "응답 본문 없음"}`
+    );
+  }
+
+  return (responseBody ? JSON.parse(responseBody) : undefined) as T;
 }
 
 export function analyzeIncident(payload: IncidentInput) {
@@ -93,5 +135,5 @@ export function getIncidentQuickContext(id: number) {
 
 export function pdfUrl(path?: string) {
   if (!path) return "#";
-  return `${API_BASE.replace(/\/api$/, "")}${path}`;
+  return `${API_BASE.replace(/\/api$/i, "")}/${path.replace(/^\/+/, "")}`;
 }

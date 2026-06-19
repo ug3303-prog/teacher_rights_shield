@@ -130,8 +130,9 @@ export function NewIncidentPage({ allowSamples }: { allowSamples: boolean }) {
     try {
       const result = await analyzeIncident({ ...form, occurred_at: new Date(form.occurred_at).toISOString() });
       setAnalysis(result);
-    } catch {
-      setError("분석 요청에 실패했습니다. 백엔드 서버가 실행 중인지 확인해 주세요.");
+    } catch (requestError) {
+      const detail = requestError instanceof Error ? requestError.message : "알 수 없는 오류";
+      setError(`분석 요청에 실패했습니다. ${detail}`);
     } finally {
       setLoading(false);
     }
@@ -143,8 +144,9 @@ export function NewIncidentPage({ allowSamples }: { allowSamples: boolean }) {
     try {
       const saved = await saveIncident({ ...form, occurred_at: new Date(form.occurred_at).toISOString() }, analysis);
       router.push(`/incidents/${saved.id}`);
-    } catch {
-      setError("저장에 실패했습니다.");
+    } catch (requestError) {
+      const detail = requestError instanceof Error ? requestError.message : "알 수 없는 오류";
+      setError(`저장에 실패했습니다. ${detail}`);
     } finally {
       setLoading(false);
     }
