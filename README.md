@@ -12,7 +12,7 @@
 - 개인정보 마스킹: 전화번호, 학생 이름, 보호자 이름, 주소를 저장 전 자동 마스킹
 - AI 위험도 분석: LOW, MEDIUM, HIGH 및 0~100점 점수화
 - 사건 상태 관리: `NEW`, `REPORTED`, `IN_REVIEW`, `CLOSED`, `ESCALATED`
-- 반복 민원 Thread: 동일 보호자명 기준 `parent_threads`로 묶고 최근 30일 3건 이상이면 경고
+- 반복 민원 Thread: 선택 입력한 보호자명을 마스킹 저장하고 원본 비저장 해시 기준으로 묶어 최근 30일 3건 이상이면 경고
 - 관리자 협업: 관리자 공유용 요약 복사, 관리자 이메일 전송 mock
 - 보호센터 연결: HIGH 위험도일 때 지역 기반 교육활동보호센터 추천
 - Audit Log Timeline: 생성, 분석, PDF 생성, 조회, 상태 변경, 이메일 전송 이력 표시
@@ -56,6 +56,7 @@ erDiagram
     datetime occurred_at
     string place
     string target_type
+    string parent_name
     string complaint_type
     text content
     text memo

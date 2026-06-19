@@ -17,6 +17,7 @@ const initialInput: IncidentInput = {
   occurred_at: "",
   place: "",
   target_type: "보호자",
+  parent_name: "",
   complaint_type: "부당 요구형",
   content: "",
   memo: "",
@@ -200,6 +201,15 @@ export function NewIncidentPage({ allowSamples }: { allowSamples: boolean }) {
               </select>
             </Field>
           </div>
+          <Field label="보호자 이름 (선택)">
+            <input
+              className={inputClass}
+              value={form.parent_name ?? ""}
+              onChange={(event) => update("parent_name", event.target.value)}
+              placeholder="예: 홍길동 (저장 시 홍**로 마스킹)"
+              autoComplete="off"
+            />
+          </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="민원 유형">
               <select className={inputClass} value={form.complaint_type} onChange={(event) => update("complaint_type", event.target.value)}>

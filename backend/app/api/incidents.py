@@ -1,6 +1,5 @@
 import hashlib
 import json
-import re
 from collections import Counter
 from datetime import datetime, timedelta
 
@@ -45,19 +44,12 @@ def _json_list(value: str) -> list[str]:
         return [value]
 
 
-def _masked_parent_name(payload: IncidentSaveRequest) -> str:
-    text = f"{payload.content} {payload.memo or ''}"
-    labeled = re.search(r"(?:보호자|학부모|민원인|이름)\s*[:：]\s*([가-힣]{2,4})", text)
-    contextual = re.search(r"\b([가-힣]{2,4})(?=\s*(?:보호자|학부모|어머니|아버지|님))", text)
-    if labeled:
-        return mask_korean_name(labeled.group(1))
-    if contextual:
-        return mask_korean_name(contextual.group(1))
-    return "보호자미상"
+def _normalized_parent_name(value: str | None) -> str:
+    return "".join((value or "").split()).casefold()
 
 
-def _thread_group_id(parent_name_masked: str) -> str:
-    return hashlib.sha256(parent_name_masked.encode("utf-8")).hexdigest()[:16]
+def _thread_group_id(parent_name: str) -> str:
+    return hashlib.sha256(parent_name.encode("utf-8")).hexdigest()[:16]
 
 
 def _center_for_place(db: Session, place: str) -> ProtectionCenter | None:
@@ -98,10 +90,10 @@ def _related_history(db: Session, incident: IncidentLog) -> list[ParentThreadRes
     ]
 
 
-def _repeated_pattern_detected(db: Session, incident: IncidentLog) -> bool:
+def _repeated_incident_count(db: Session, incident: IncidentLog) -> int:
     thread = db.query(ParentThread).filter(ParentThread.incident_id == incident.id).first()
     if not thread:
-        return False
+        return 0
     cutoff = datetime.utcnow() - timedelta(days=30)
     count = (
         db.query(ParentThread)
@@ -113,7 +105,7 @@ def _repeated_pattern_detected(db: Session, incident: IncidentLog) -> bool:
         )
         .count()
     )
-    return count >= 3
+    return count
 
 
 def _timeline(db: Session, incident_id: int) -> list[AuditLogResponse]:
@@ -163,12 +155,14 @@ def _active_incident(db: Session, incident_id: int) -> IncidentLog:
 
 def to_response(db: Session, incident: IncidentLog, include_details: bool = False) -> IncidentResponse:
     center = _center_for_place(db, incident.place) if incident.risk_level == "HIGH" else None
+    repeated_count = _repeated_incident_count(db, incident)
     return IncidentResponse(
         id=incident.id,
         created_at=incident.created_at,
         occurred_at=incident.occurred_at,
         place=incident.place,
         target_type=incident.target_type,
+        parent_name=incident.parent_name,
         complaint_type=incident.complaint_type,
         content=incident.content,
         memo=incident.memo,
@@ -184,7 +178,8 @@ def to_response(db: Session, incident: IncidentLog, include_details: bool = Fals
         disclaimer_version=incident.disclaimer_version,
         status=incident.status,
         deleted_at=incident.deleted_at,
-        repeated_pattern_detected=_repeated_pattern_detected(db, incident),
+        repeated_pattern_detected=repeated_count >= 3,
+        repeated_incident_count=repeated_count,
         related_history=_related_history(db, incident) if include_details else [],
         timeline=_timeline(db, incident.id) if include_details else [],
         recommended_center=_center_response(center),
@@ -217,10 +212,13 @@ async def save_incident(payload: IncidentSaveRequest, request: Request, db: Sess
     analysis = payload.analysis or await build_provider(get_settings()).analyze(
         IncidentAnalyzeRequest(**payload.model_dump(exclude={"analysis"}))
     )
+    normalized_parent_name = _normalized_parent_name(payload.parent_name)
+    masked_parent_name = mask_korean_name(normalized_parent_name) if normalized_parent_name else None
     incident = IncidentLog(
         occurred_at=payload.occurred_at,
         place=mask_sensitive_text(payload.place) or payload.place,
         target_type=payload.target_type,
+        parent_name=masked_parent_name,
         complaint_type=payload.complaint_type,
         content=mask_sensitive_text(payload.content) or payload.content,
         memo=mask_sensitive_text(payload.memo),
@@ -236,16 +234,14 @@ async def save_incident(payload: IncidentSaveRequest, request: Request, db: Sess
     )
     db.add(incident)
     db.flush()
-    parent_name = _masked_parent_name(payload)
-    if parent_name == "보호자미상":
-        parent_name = f"보호자미상-{incident.id}"
-    db.add(
-        ParentThread(
-            incident_id=incident.id,
-            parent_name_masked=parent_name,
-            thread_group_id=_thread_group_id(parent_name),
+    if normalized_parent_name and masked_parent_name:
+        db.add(
+            ParentThread(
+                incident_id=incident.id,
+                parent_name_masked=masked_parent_name,
+                thread_group_id=_thread_group_id(normalized_parent_name),
+            )
         )
-    )
     write_audit_log(db, request, "create", incident.id)
     incident.pdf_url, incident.pdf_hash = generate_incident_pdf(incident)
     write_audit_log(db, request, "pdf_generate", incident.id)

@@ -15,6 +15,7 @@ class IncidentLog(Base):
     occurred_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     place: Mapped[str] = mapped_column(String(120), nullable=False)
     target_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    parent_name: Mapped[Optional[str]] = mapped_column(String(80), nullable=True, index=True)
     complaint_type: Mapped[str] = mapped_column(String(80), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     memo: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

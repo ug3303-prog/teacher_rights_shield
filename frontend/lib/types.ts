@@ -5,6 +5,7 @@ export type IncidentInput = {
   occurred_at: string;
   place: string;
   target_type: string;
+  parent_name?: string;
   complaint_type: string;
   content: string;
   memo?: string;
@@ -71,6 +72,7 @@ export type Incident = IncidentInput & {
   status: IncidentStatus;
   deleted_at?: string;
   repeated_pattern_detected: boolean;
+  repeated_incident_count: number;
   related_history: ParentThread[];
   timeline: AuditLog[];
   recommended_center?: ProtectionCenter;

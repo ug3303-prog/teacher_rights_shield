@@ -51,7 +51,10 @@ export default async function IncidentDetailPage({ params }: { params: Promise<{
         <Card className="border-amber-300 bg-amber-50 p-5 text-amber-900">
           <div className="flex items-start gap-3">
             <Repeat2 className="mt-0.5 h-5 w-5" />
-            <p className="font-semibold">반복 민원 패턴이 감지되었습니다.</p>
+            <div>
+              <p className="font-semibold">반복 민원 패턴 감지</p>
+              <p className="mt-1 text-sm">최근 30일 내 동일 보호자 기록 {incident.repeated_incident_count}건이 있습니다.</p>
+            </div>
           </div>
         </Card>
       )}
@@ -121,6 +124,7 @@ export default async function IncidentDetailPage({ params }: { params: Promise<{
             <div>발생 일시: {formatDateTime(incident.occurred_at)}</div>
             <div>장소: {incident.place}</div>
             <div>대상: {incident.target_type}</div>
+            <div>보호자 이름: {incident.parent_name || "미입력"}</div>
             <div>민원 유형: {incident.complaint_type}</div>
             <div>감정 상태: {incident.emotion}</div>
           </dl>

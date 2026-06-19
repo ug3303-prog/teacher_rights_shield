@@ -10,6 +10,7 @@ def ensure_schema_columns() -> None:
             "place": "ALTER TABLE incident_logs ADD COLUMN place VARCHAR(120) NOT NULL DEFAULT '미기록'",
             "memo": "ALTER TABLE incident_logs ADD COLUMN memo TEXT",
             "emotion": "ALTER TABLE incident_logs ADD COLUMN emotion VARCHAR(40) NOT NULL DEFAULT '일반'",
+            "parent_name": "ALTER TABLE incident_logs ADD COLUMN parent_name VARCHAR(80)",
             "pdf_hash": "ALTER TABLE incident_logs ADD COLUMN pdf_hash VARCHAR(64)",
             "disclaimer_version": "ALTER TABLE incident_logs ADD COLUMN disclaimer_version VARCHAR(20) NOT NULL DEFAULT 'v1.0'",
             "status": "ALTER TABLE incident_logs ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'NEW'",
@@ -42,5 +43,12 @@ def ensure_schema_columns() -> None:
                     text(
                         "CREATE INDEX ix_incident_logs_deleted_at "
                         "ON incident_logs (deleted_at)"
+                    )
+                )
+            if "ix_incident_logs_parent_name" not in index_names:
+                connection.execute(
+                    text(
+                        "CREATE INDEX ix_incident_logs_parent_name "
+                        "ON incident_logs (parent_name)"
                     )
                 )

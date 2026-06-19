@@ -11,6 +11,7 @@ class IncidentBase(BaseModel):
     occurred_at: datetime
     place: str = Field(min_length=1, max_length=120)
     target_type: str
+    parent_name: str | None = Field(default=None, max_length=80)
     complaint_type: str
     content: str = Field(min_length=10)
     memo: str | None = None
@@ -91,6 +92,7 @@ class IncidentResponse(IncidentBase):
     status: str = "NEW"
     deleted_at: datetime | None = None
     repeated_pattern_detected: bool = False
+    repeated_incident_count: int = 0
     related_history: list[ParentThreadResponse] = []
     timeline: list[AuditLogResponse] = []
     recommended_center: ProtectionCenterResponse | None = None

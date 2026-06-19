@@ -17,9 +17,14 @@ export function RiskPanel({ analysis }: { analysis: AnalysisResult }) {
               <p className="font-semibold">고위험 민원입니다. 즉시 관리자 공유를 권장합니다.</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <span className="rounded-md bg-red-700 px-3 py-2 text-xs font-semibold text-white">관리자 공유하기</span>
-                <span className="inline-flex items-center gap-1 rounded-md bg-white px-3 py-2 text-xs font-semibold text-red-700">
+                <button
+                  type="button"
+                  disabled
+                  title="먼저 기록을 저장해야 PDF 생성이 가능합니다."
+                  className="inline-flex cursor-not-allowed items-center gap-1 rounded-md bg-white px-3 py-2 text-xs font-semibold text-red-400 opacity-70"
+                >
                   <Download className="h-3.5 w-3.5" /> PDF 바로 저장
-                </span>
+                </button>
                 <span className="rounded-md bg-white px-3 py-2 text-xs font-semibold text-red-700">보호센터 문의 안내</span>
               </div>
             </div>
