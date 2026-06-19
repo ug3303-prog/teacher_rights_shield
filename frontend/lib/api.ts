@@ -53,6 +53,10 @@ export function getIncident(id: string) {
   return request<Incident>(`/incident/${id}`);
 }
 
+export function recordIncidentView(id: number) {
+  return request<OperationResult>(`/incident/${id}/view`, { method: "POST" });
+}
+
 export function updateIncidentStatus(id: number, status: IncidentStatus) {
   return request<Incident>(`/incident/${id}/status`, {
     method: "POST",

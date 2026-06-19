@@ -6,6 +6,7 @@ import { HighRiskActions } from "@/components/high-risk-actions";
 import { ShareSummary } from "@/components/share-summary";
 import { StatusControl } from "@/components/status-control";
 import { DeleteIncidentButton } from "@/components/delete-incident-button";
+import { IncidentViewAudit } from "@/components/incident-view-audit";
 import { Badge, Card } from "@/components/ui";
 import { formatDateTime, guideFor, riskLabel } from "@/lib/utils";
 import { getAppMode } from "@/lib/app-mode";
@@ -29,6 +30,7 @@ export default async function IncidentDetailPage({ params }: { params: Promise<{
 
   return (
     <main className="mx-auto grid max-w-5xl gap-5 px-4 py-6">
+      <IncidentViewAudit incidentId={incident.id} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-gold">분석 결과</p>

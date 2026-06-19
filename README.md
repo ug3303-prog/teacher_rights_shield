@@ -258,6 +258,7 @@ FastAPI 자동 문서:
 | POST | `/api/incident/save` | 입력 내용을 마스킹 저장하고 PDF URL, PDF hash, 보호자 thread 생성 |
 | GET | `/api/incident/list` | 전체 기록 목록 조회 |
 | GET | `/api/incident/{id}` | 단일 기록 상세, 관련 민원 히스토리, timeline, 추천 보호센터 조회 |
+| POST | `/api/incident/{id}/view` | 상세 화면 hydration 이후 `view` Audit 기록 |
 | POST | `/api/incident/{id}/status` | 사건 상태 변경 및 `status_change` audit 기록 |
 | POST | `/api/incident/{id}/email` | 관리자 이메일 전송 mock 및 `email_send` audit 기록 |
 | GET | `/api/incident/{id}/pdf` | PDF 보고서 다운로드 및 `pdf_generate` audit 기록 |

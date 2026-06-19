@@ -14,7 +14,7 @@ const targetTypes = ["학생", "보호자", "관리자"];
 const emotions = ["불안", "압박", "협박", "일반"];
 
 const initialInput: IncidentInput = {
-  occurred_at: new Date().toISOString().slice(0, 16),
+  occurred_at: "",
   place: "",
   target_type: "보호자",
   complaint_type: "부당 요구형",
@@ -43,6 +43,14 @@ export function NewIncidentPage({ allowSamples }: { allowSamples: boolean }) {
   const [recording, setRecording] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+
+  useEffect(() => {
+    setForm((current) => (
+      current.occurred_at
+        ? current
+        : { ...current, occurred_at: new Date().toISOString().slice(0, 16) }
+    ));
+  }, []);
 
   const speechSupported = useMemo(() => {
     if (typeof window === "undefined") return false;

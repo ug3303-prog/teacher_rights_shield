@@ -330,11 +330,17 @@ def incident_quick_context(incident_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{incident_id}", response_model=IncidentResponse)
-def get_incident(incident_id: int, request: Request, db: Session = Depends(get_db)):
+def get_incident(incident_id: int, db: Session = Depends(get_db)):
+    incident = _active_incident(db, incident_id)
+    return to_response(db, incident, include_details=True)
+
+
+@router.post("/{incident_id}/view", response_model=OperationResponse)
+def record_incident_view(incident_id: int, request: Request, db: Session = Depends(get_db)):
     incident = _active_incident(db, incident_id)
     write_audit_log(db, request, "view", incident.id)
     db.commit()
-    return to_response(db, incident, include_details=True)
+    return OperationResponse(ok=True, message="조회 기록이 저장되었습니다.")
 
 
 @router.post("/{incident_id}/status", response_model=IncidentResponse)
